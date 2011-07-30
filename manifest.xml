@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin_manifest>
+	<field key="name" value="Facebook Services" />
+	<field key="author" value="anirupdutta" />
+	<field key="version" value="1.7" />
+	<field key="description" value="Allows users to authenticate their Elgg account with Facebook." />
+	<field key="category" value="service" />
+	<field key="category" value="official" />
+	<field key="website" value="http://www.sync.heybuddy.in/" />
+	<field key="copyright" value="(C) anirupdutta 2011" />
+	<field key="licence" value="GNU Public License version 2" />
+	<field key="elgg_version" value="2010040201" />
+</plugin_manifest>
