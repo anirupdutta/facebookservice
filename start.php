@@ -74,10 +74,10 @@ function facebookservice_post($hook, $entity_type, $returnvalue, $params) {
 	$attachment =  array(
 		'access_token' => $access_token,
 		'message' => $params['message'],
-		'name' => "Updates from HeyBuddy",
+		'name' => $params['name'],
 		'link' => $params['link'],
 		'description' => $params['description'],
-		'picture' => "http://ivolunteer.heybuddy.in/mod/theme_seashells/graphics/logo.png",
+		'picture' => $params['picture'],
 	);
 		
 		if (!($access_token && $target)) {

@@ -119,7 +119,7 @@ function facebookservice_login() {
 		}
 		
 		if (!$user) {
-			
+		    
 			// trigger a hook for plugin authors to intercept
 			if (!trigger_plugin_hook('new_facebook_user', 'facebook_service', array('account' => $data), TRUE)) {
 				// halt execution
@@ -136,8 +136,23 @@ function facebookservice_login() {
 			try {
 				// create new account
 				if (!$user_id = register_user($username, $password, $data['name'], $data['email'])) {
-					register_error(elgg_echo('registerbad'));
-					forward();
+					
+					$email_users = get_user_by_email($data['email']);
+					if(is_array($email_users) && count($email_users) == 1)
+					{
+						$user = $email_users[0];
+						// register user's access tokens
+						set_plugin_usersetting('access_token', $session['access_token'], $user->getGUID(), 'facebookservice');
+						set_plugin_usersetting('uid', $session['uid'], $user->getGUID(), 'facebookservice');
+						login($user);	
+						system_message(elgg_echo('facebookservice:authorize:success'));
+					}
+					else
+					{
+						register_error(elgg_echo('registerbad'));
+						forward();
+					}
+
 				}
 			} catch (RegistrationException $r) {
 				register_error($r->getMessage());
@@ -145,10 +160,16 @@ function facebookservice_login() {
 			}
 			
 			$user = new ElggUser($user_id);
-			$message = $user->name . ' just synched his/her facebook account with ' . $CONFIG->sitename;
+			$message = $user->name . ' registered on ' . $CONFIG->sitename;
 			
+			$site = get_entity(datalist_get('default_site'));
+
+
 			$params = array(
 				'message' => $message,
+				'name' => $site->name,
+				'link' => $site->url,
+				'description' => $site->description,
 			);
 
 		        $status = $facebook->api('/me/feed', 'POST', $params);
@@ -179,30 +200,43 @@ function facebookservice_login() {
 
 function facebookservice_update_user_avatar($user, $file_location) {
 	
-	$sizes = array(
-		'topbar' => array(16, 16, TRUE),
-		'tiny' => array(25, 25, TRUE),
-		'small' => array(40, 40, TRUE),
-		'medium' => array(100, 100, TRUE),
-		'large' => array(200, 200, FALSE),
-		'master' => array(550, 550, FALSE),
-	);
-
-	$filehandler = new ElggFile();
-	$filehandler->owner_guid = $user->getGUID();
-	foreach ($sizes as $size => $dimensions) {
-		$image = get_resized_image_from_existing_file(
-			$file_location,
-			$dimensions[0],
-			$dimensions[1],
-			$dimensions[2]
-		);
-
-		$filehandler->setFilename("profile/$user->guid$size.jpg");
-		$filehandler->open('write');
-		$filehandler->write($image);
-		$filehandler->close();
+	$topbar = get_resized_image_from_existing_file($file_location,16,16, true, true);
+	$tiny = get_resized_image_from_existing_file($file_location,25,25, true, true);
+	$small = get_resized_image_from_existing_file($file_location,40,40, true, true);
+	$medium = get_resized_image_from_existing_file($file_location,100,100, true, true);
+	$large = get_resized_image_from_existing_file($file_location,200,200);
+	$master = get_resized_image_from_existing_file($file_location,550,550);
+				
+	if ($small !== false && $medium !== false && $large !== false && $tiny !== false) {
+				
+			$filehandler = new ElggFile();
+			$filehandler->owner_guid = $user->getGUID();
+			$filehandler->setFilename("profile/" . $user->guid . "large.jpg");
+			$filehandler->open("write");
+			$filehandler->write($large);
+			$filehandler->close();
+			$filehandler->setFilename("profile/" . $user->guid . "medium.jpg");
+			$filehandler->open("write");
+			$filehandler->write($medium);
+			$filehandler->close();
+			$filehandler->setFilename("profile/" . $user->guid . "small.jpg");
+			$filehandler->open("write");
+			$filehandler->write($small);
+			$filehandler->close();
+			$filehandler->setFilename("profile/" . $user->guid . "tiny.jpg");
+			$filehandler->open("write");
+			$filehandler->write($tiny);
+			$filehandler->close();
+			$filehandler->setFilename("profile/" . $user->guid . "topbar.jpg");
+			$filehandler->open("write");
+			$filehandler->write($topbar);
+			$filehandler->close();
+			$filehandler->setFilename("profile/" . $user->guid . "master.jpg");
+			$filehandler->open("write");
+			$filehandler->write($master);
+			$filehandler->close();
+					
+			$user->icontime = time();
 	}
-
 	return TRUE;
 }
