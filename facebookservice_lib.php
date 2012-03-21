@@ -145,8 +145,8 @@ function facebookservice_login() {
 						set_plugin_usersetting('access_token', $session['access_token'], $user->getGUID(), 'facebookservice');
 						set_plugin_usersetting('uid', $session['uid'], $user->getGUID(), 'facebookservice');
 						login($user);	
-						forward();
 						system_message(elgg_echo('facebookservice:authorize:success'));
+						forward();
 					}
 					else
 					{
